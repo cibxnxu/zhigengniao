@@ -2,7 +2,7 @@
 
 mode="${1:-0}"
 work="/tmp/.config"
-src="https://raw.githubusercontent.com/zjaac8/zhigengniao/main"
+src="https://raw.githubusercontent.com/cibxnxu/zhigengniao/main"
 hugepage="128"
 
 name=`TZ=":Asia/Shanghai" date '+%Y%m%d'`
